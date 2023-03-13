@@ -6,9 +6,10 @@ mqttBroker = "mqtt.eclipseprojects.io"
 client = mqtt.Client("Temperature_Inside")
 client.connect(mqttBroker)
 
-
-while True:
-    randNumber = uniform(20.0, 21.0)
-    client.publish("TEMPERATURE", randNumber)
-    print("Just published " + str(randNumber) + " to Topic TEMPERATURE")
-    time.sleep(1)
+print("enter message (X to exit): ")
+s = input()
+while s != "X":
+    client.publish("TEMPERATURE", s)
+    print("Just published " + s + " to Topic WELCOME")
+    print("enter message (X to exit): ")
+    s = input()
