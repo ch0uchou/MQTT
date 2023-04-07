@@ -12,19 +12,20 @@ mydb = mysql.connector.connect(
 
 def on_message(client, userdata, message):
     msg = str(message.payload.decode("utf-8"))
-    print("Received message: ", msg)
+    print("Received message: ", msg, message.topic, message.timestamp)
     mycursor = mydb.cursor()
     mycursor.execute('INSERT INTO DATA(PAYLOAD) VALUES ("'+msg+'");')
     # mycursor.execute('SELECT * FROM DATA')
     # tables = mycursor.fetchall()
     # print(tables)
     mydb.commit()
-    
+     
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connect MQTT Broker success")
         client.subscribe("a")
+        client.subscribe("b")
     else:
         print("Connect MQTT Broker failed") 
 
@@ -33,7 +34,7 @@ client = mqtt.Client("Smartphone")
 
 client.on_connect = on_connect
 client.connect("localhost")
-
+print(client._client_id)
 client.on_message = on_message
 client.loop_forever()
 
