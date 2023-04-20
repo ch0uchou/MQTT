@@ -3,9 +3,16 @@ import tkinter as tk
 from tkinter import messagebox
 import tkinter.ttk as ttk
 import paho.mqtt.client as mqtt
+from sqlalchemy import Engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
+from datetime import datetime
+import Data as data
 import random
 import string
 import json
+
+from Data import Client, Message
 
 
 def get_random_string(length):
@@ -216,7 +223,7 @@ class MmtWidget(ttk.Notebook):
         self.button1 = ttk.Button(frame5)
         self.button1.configure(text='send', width=4)
         self.button1.pack(side="left")
-        self.button1.configure(command=self.publishsigle)
+        self.button1.configure(command=self.publishsingle)
         combobox2 = ttk.Combobox(frame5)
         self.qos = tk.StringVar()
         combobox2.configure(textvariable=self.qos, values='0 1 2', width=1)
@@ -244,7 +251,7 @@ class MmtWidget(ttk.Notebook):
     
         panedwindow2.pack(expand="true", fill="both", side="top")
         frame4.pack(side="top")
-        notebook1.add(frame4, text='Sigle')
+        notebook1.add(frame4, text='Single')
         frame6 = ttk.Frame(notebook1)
         frame6.configure(height=200, width=200)
         frame8 = ttk.Frame(frame6)
@@ -358,7 +365,7 @@ class MmtWidget(ttk.Notebook):
         panedwindow4.add(self.receivemsg, weight="1")
         panedwindow4.pack(expand="true", fill="both", side="top")
         frame9.pack(fill="both", side="top")
-        self.add(frame9, text='subsribe')
+        self.add(frame9, text='subscribe')
         self.configure(height=600, width=600)
         self.pack(expand="true", fill="both", side="top")
         self.combobox4.current(0)
@@ -414,11 +421,20 @@ class MmtWidget(ttk.Notebook):
             print("Disconnect successful")
             info = messagebox.showinfo(message="Disconnect successful")
             self.enable_disconnect()
+    def on_publish(self, client, userdata, mid):
+        self.mid = mid
 
     
 
     def connect(self):
         if (self.connectionstatus.get() == "connect"):
+            if not data.Client.exists(self.client_id.get()):
+                client_ = Client(
+                    username=self.username.get(),
+                    password=self.password.get(),
+                    client_id=self.client_id.get()
+                )
+                client_.create()
             self.client = mqtt.Client(
                 client_id = self.client_id.get(),
                 clean_session = self.clean_session.get(),
@@ -450,7 +466,7 @@ class MmtWidget(ttk.Notebook):
         
 
 
-    def publishsigle(self):
+    def publishsingle(self):
         if (self.connectionstatus.get() != "connect"):
             if (self.topic.get() == ""): 
                 info = messagebox.showerror(message="Enter topic")
@@ -462,17 +478,33 @@ class MmtWidget(ttk.Notebook):
                 info = messagebox.showerror(message="Choose QoS")
                 return
             try:
+                self.client.on_publish = self.on_publish
+                # publish the message and get the mid value
                 self.client.publish(
                     topic= self.topic.get(),
                     payload= self.payloadsub.get("1.0",'end-1c'),
                     qos = int(self.qos.get()),
-                    retain = int(self.retain.get())
+                    retain = bool(int(self.retain.get()))
                 )
+                # create a new Message instance with the obtained mid value and other message attributes
+                message = Message(
+                    timestamp=datetime.now(),
+                    mid = self.mid,  # Replace with actual message id
+                    dup=False,  # Replace with actual dup value
+                    state="published",
+                    topic=self.topic.get(),
+                    payload=self.payloadsub.get("1.0",'end-1c'),
+                    qos=int(self.qos.get()),
+                    retain=int(self.retain.get())
+                )
+                # store the message in the database
+                message.create()
                 info = messagebox.showinfo(message="Publish successful")
             except:
                 info = messagebox.showinfo(message="Publish fail")
         else: 
             info = messagebox.showerror(message="Please connect")
+
 
     def publishmulti(self):
         if (self.connectionstatus.get() != "connect"):
@@ -510,6 +542,10 @@ class MmtWidget(ttk.Notebook):
         if (self.connectionstatus.get() != "connect"):
             if (self.entry4.get() != ""):
                 # check database
+                for topic in self.topiclist.get_children():
+                    if str(self.topiclist.item(topic)["values"][0]) == self.entry4.get():
+                        info = messagebox.showerror(message="This topic already on subscribe");
+                        return
                 self.client.subscribe(
                     topic = self.entry4.get(),
                     qos= int(self.combobox4.get())
