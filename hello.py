@@ -16,7 +16,6 @@ def get_random_string(length):
 class MmtWidget(ttk.Notebook):
     client = mqtt.Client()
 
-
     def __init__(self, master=None, **kw):
         super(MmtWidget, self).__init__(master, **kw)
         self.frame5 = ttk.Frame(self)
@@ -242,14 +241,7 @@ class MmtWidget(ttk.Notebook):
         self.payloadsub.configure(height=10, width=50)
         self.payloadsub.pack(expand="true", fill="both", side="top")
         labelframe3.pack(expand="true", fill="both", side="top")
-        panedwindow2.add(labelframe3, weight="1")
-        labelframe4 = ttk.Labelframe(panedwindow2)
-        labelframe4.configure(height=200, text='Payload status', width=200)
-        treeview1 = ttk.Treeview(labelframe4)
-        treeview1.configure(selectmode="extended")
-        treeview1.pack(expand="true", fill="both", side="top")
-        labelframe4.pack(side="top")
-        panedwindow2.add(labelframe4, weight="1")
+    
         panedwindow2.pack(expand="true", fill="both", side="top")
         frame4.pack(side="top")
         notebook1.add(frame4, text='Sigle')
@@ -274,17 +266,17 @@ class MmtWidget(ttk.Notebook):
         self.multipayloadsub.pack(expand="true", fill="both", side="top")
         labelframe5.pack(expand="true", fill="both", side="top")
         panedwindow3.add(labelframe5, weight="1")
-        labelframe6 = ttk.Labelframe(panedwindow3)
-        labelframe6.configure(height=200, text='Payload status', width=200)
+        # labelframe6 = ttk.Labelframe(panedwindow3)
+        # labelframe6.configure(height=200, text='Payload status', width=200)
         button3 = ttk.Button(frame6)
         button3.configure(text='send')
         button3.pack(side="bottom")
         button3.configure(command=self.publishmulti)
-        treeview2 = ttk.Treeview(labelframe6)
-        treeview2.configure(selectmode="extended")
-        treeview2.pack(expand="true", fill="both", side="top")
-        labelframe6.pack(side="top")
-        panedwindow3.add(labelframe6, weight="1")
+        # treeview2 = ttk.Treeview(labelframe6)
+        # treeview2.configure(selectmode="extended")
+        # treeview2.pack(expand="true", fill="both", side="top")
+        # labelframe6.pack(side="top")
+        # panedwindow3.add(labelframe6, weight="1")
         panedwindow3.pack(expand="true", fill="both", side="top")
         frame6.pack(side="top")
         notebook1.add(frame6, text='Multi')
@@ -295,12 +287,82 @@ class MmtWidget(ttk.Notebook):
         self.retain.set(0)
         ########subscribe#######
         
-        frame7 = ttk.Frame(self)
-        frame7.configure(height=200, width=200)
-        frame7.pack(side="top")
-        self.add(frame7, text='subsribe')
+        frame9 = ttk.Frame(self)
+        frame9.configure(height=200, width=200)
+        frame10 = ttk.Frame(frame9)
+        frame10.configure(height=200, width=200)
+        label10 = ttk.Label(frame10)
+        label10.configure(text='topic')
+        label10.pack(padx=5, side="left")
+        self.entry4 = ttk.Entry(frame10)
+        self.entry4.configure(textvariable=self.topic)
+        self.entry4.pack(padx=5, side="left")
+        self.addtopic = ttk.Button(frame10)
+        self.addtopic.configure(text='+', width=1)
+        self.addtopic.pack(side="left")
+        self.addtopic.configure(command=self.addsubtopic)
+        self.combobox4 = ttk.Combobox(frame10)
+        self.combobox4.configure(textvariable=self.qos, values='0 1 2', width=1)
+        self.combobox4.pack(pady=0, side="right")
+        label11 = ttk.Label(frame10)
+        label11.configure(text='QoS')
+        label11.pack(padx=2, side="right")
+        self.deltopic = ttk.Button(frame10)
+        self.deltopic.configure(text='-', width=1)
+        self.deltopic.pack(side="left")
+        self.deltopic.configure(command=self.delsubtopic)
+        frame10.pack(fill="x", pady=10, side="top")
+        panedwindow4 = ttk.Panedwindow(frame9, orient="vertical")
+        panedwindow4.configure(height=200, width=200)
+        labelframe7 = ttk.Labelframe(panedwindow4)
+        labelframe7.configure(height=200, text='', width=200)
+        frame2 = ttk.Frame(labelframe7)
+        frame2.configure(height=200, width=200)
+        self.topiclist = ttk.Treeview(frame2, columns=(1),show='headings')
+        self.topiclist.heading(1,text='Topic List',anchor='center')
+        # self.topiclist.configure(selectmode="extended")
+        self.topiclist.pack(fill="both", side="top",anchor='center')
+        self.topiclist.column(1,anchor="center",width=0)
+        self.topiclist.bind(
+            "<<TreeviewSelect>>",
+            self.callbacktopiclist,
+            add="")
+        # vsb = ttk.Scrollbar(frame2,orient="vertical",command=self.topiclist.yview)
+        # self.topiclist.configure(yscrollcommand=vsb.set)
+        # vsb.pack(side='right')
+
+        frame2.pack(expand="true", fill="both", side="top")
+        labelframe7.pack(expand="true", fill="x", side="top")
+        panedwindow4.add(labelframe7, weight="1")
+        self.receivemsg = ttk.Labelframe(panedwindow4)
+        self.receivemsg.configure(
+            height=200, text='Receive message', width=200)
+        frame3 = ttk.Frame(self.receivemsg)
+        frame3.configure(height=200, width=200)
+        self.treeview3 = ttk.Treeview(frame3, columns=(1,2,3,4),show='headings')
+        self.treeview3.heading(1,text='Timestamp',anchor='center')
+        self.treeview3.heading(2,text='Topic',anchor='center')
+        self.treeview3.heading(3,text='Payload',anchor='center')
+        self.treeview3.heading(4,text='QoS',anchor='center')
+        self.treeview3.pack(fill="both", side="top",anchor='center')
+        self.treeview3.column(1,anchor="center",width=0)
+        self.treeview3.column(2,anchor="center",width=0)
+        self.treeview3.column(3,anchor="center",width=0)
+        self.treeview3.column(4,anchor="center",width=0)
+        # self.treeview3.bind(
+        #     "<<TreeviewSelect>>",
+        #     self.callbacktreeview3,
+        #     add="")
+        frame3.pack(expand="true", fill="both", side="top")
+        self.receivemsg.pack(side="bottom")
+        panedwindow4.add(self.receivemsg, weight="1")
+        panedwindow4.pack(expand="true", fill="both", side="top")
+        frame9.pack(fill="both", side="top")
+        self.add(frame9, text='subsribe')
         self.configure(height=600, width=600)
         self.pack(expand="true", fill="both", side="top")
+        self.combobox4.current(0)
+
 
 
     ########connect excute###########
@@ -387,7 +449,6 @@ class MmtWidget(ttk.Notebook):
         self.client_id.set(get_random_string(8))
         
 
-    ########### publish excute #######
 
     def publishsigle(self):
         if (self.connectionstatus.get() != "connect"):
@@ -400,13 +461,16 @@ class MmtWidget(ttk.Notebook):
             if (self.qos.get() == ""):
                 info = messagebox.showerror(message="Choose QoS")
                 return
-            self.client.publish(
-                topic= self.topic.get(),
-                payload= self.payloadsub.get("1.0",'end-1c'),
-                qos = int(self.qos.get()),
-                retain = int(self.retain.get())
-            )
-
+            try:
+                self.client.publish(
+                    topic= self.topic.get(),
+                    payload= self.payloadsub.get("1.0",'end-1c'),
+                    qos = int(self.qos.get()),
+                    retain = int(self.retain.get())
+                )
+                info = messagebox.showinfo(message="Publish successful")
+            except:
+                info = messagebox.showinfo(message="Publish fail")
         else: 
             info = messagebox.showerror(message="Please connect")
 
@@ -426,10 +490,48 @@ class MmtWidget(ttk.Notebook):
                         qos = i["qos"],
                         retain = i["retain"]
                     )
+                    info = messagebox.showinfo(message="Publish successful")
             except:
-                pass
+                info = messagebox.showinfo(message="Publish fail")
+
         else: 
             info = messagebox.showerror(message="Please connect")
+
+
+        ########### subscribe excute #######
+
+    def on_message(self, client, userdata, message):
+        msg = str(message.payload.decode("utf-8"))
+        print("Received message: ", msg)
+        self.treeview3.insert('', tk.END, values=(message.timestamp,message._topic.decode("utf-8"),message.payload.decode("utf-8"),message.qos))
+        
+    
+    def addsubtopic(self):
+        if (self.connectionstatus.get() != "connect"):
+            if (self.entry4.get() != ""):
+                # check database
+                self.client.subscribe(
+                    topic = self.entry4.get(),
+                    qos= int(self.combobox4.get())
+                )
+                self.topiclist.insert('', tk.END, values=(self.entry4.get()))
+                self.client.on_message = self.on_message
+                self.client.loop_start()
+        else: 
+            info = messagebox.showerror(message="Please connect")
+
+        
+    def callbacktopiclist(self, event=None):
+        self.entry4.delete(0,'end')
+        item = self.topiclist.selection()[-1]
+        self.entry4.insert(0,self.topiclist.item(item,"values")[0])
+
+
+    def delsubtopic(self):
+        pass
+
+    def topicmsg(self):
+        pass
         
     def callback(self, event=None):
         pass    
