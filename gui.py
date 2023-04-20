@@ -11,7 +11,7 @@ window.geometry('1500x1500')
 
 # Frame1: broker, user, general
 Frame1 = tk.Frame(window,bd=0)
-# Frame1.pack()
+Frame1.pack()
 
 ## broker
 broker = tk.LabelFrame(Frame1,text="MQTT Broker Setting",bd=2)
@@ -122,7 +122,7 @@ status.pack(side='left',fill='both')
 
 # Frame2: publish
 Frame2 = tk.Frame(window)
-Frame2.grid(column=1,row=1)
+# Frame2.grid(column=1,row=1)
 
 # publish
 
@@ -149,7 +149,6 @@ retain.pack(side='left')
 _retain = tk.IntVar()
 retaincheck = tk.Checkbutton(retain,variable=retain,onvalue=1,offvalue=0)
 retaincheck.pack()
-
 message = tk.LabelFrame(Frame2,text="Message",border=0)
 message.pack(side='top')
 _message = tk.StringVar()
@@ -162,7 +161,7 @@ publish.pack()
 
 # Frame3: subscribe
 Frame3 = tk.Frame(window)
-Frame3.grid(column=2,row=1)
+# Frame3.grid(column=2,row=1)
 
 topicsub = tk.LabelFrame(Frame3,text="Topic",border=0)
 topicsub.pack()
