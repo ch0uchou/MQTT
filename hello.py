@@ -419,14 +419,13 @@ class MmtWidget(ttk.Notebook):
                 payload_data = self.multipayloadsub.get("1.0",'end-1c')
                 data = json.loads(payload_data)
                 for i in data['message']:
-                    print(i) 
-                # print(data)
-                # self.client.publish(
-                #     topic= self.topic.get(),
-                #     payload= self.payloadsub.get("1.0",'end-1c'),
-                #     qos = int(self.qos.get()),
-                #     retain = int(self.retain.get())
-                # )
+                    print(i)
+                    self.client.publish(
+                        topic= i["topic"],
+                        payload= i["payload"],
+                        qos = i["qos"],
+                        retain = i["retain"]
+                    )
             except:
                 pass
         else: 
