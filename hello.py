@@ -483,7 +483,7 @@ class MmtWidget(ttk.Notebook):
         if (self.connectionstatus.get() == "connect"):
             if not data.Client.exists(self.client_id.get()):
                 client_ = Client(
-                    username=self.username.get(),
+                    username = self.username.get(),
                     password=self.password.get(),
                     client_id=self.client_id.get()
                 )
@@ -506,7 +506,9 @@ class MmtWidget(ttk.Notebook):
                     keepalive = int(self.keepalive.get()),
                 )
                 self.client.loop(timeout= int(self.connect_timeout.get()))
-            except:
+            except Exception as e:
+                print("An exception occurred: ", e)
+                traceback.print_exc()
                 print("Connection refused") 
                 info = messagebox.showerror(message="Connection refused")
             self.load_subscriptions(str(self.client_id.get()))

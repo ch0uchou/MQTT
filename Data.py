@@ -118,8 +118,8 @@ class Subscription(Base):
 class Client(Base):
     __tablename__ = 'client'
     client_id = Column(String(50), primary_key=True)
-    username = Column(String(50), unique=True)
-    password = Column(String(50))
+    username = Column(String(50),nullable= True)
+    password = Column(String(50),nullable= True)
     subscriptions = relationship("Subscription", back_populates="client")
     messages = relationship("Message", back_populates="client")
     
