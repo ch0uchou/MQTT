@@ -63,7 +63,8 @@ class Message(Base):
         session.close()
         
     @classmethod
-    def get_all_messages(cls, session):
+    def get_all_messages(cls):
+        session = Session()
         return session.query(cls).all()
 
 
@@ -74,30 +75,36 @@ class Subscription(Base):
     qos = Column(Integer)
     client_id = Column(Integer, ForeignKey('client.client_id'))
     client = relationship("Client", back_populates="subscriptions")
-    
     @classmethod
-    def add_subscription(cls, session, client_id, topic):
-        subscription = cls(client_id=client_id, topic=topic)
+    def add_subscription(cls, client_id, topic,qos):
+        session = Session()
+        subscription = cls(client_id=client_id, topic=topic,qos=qos)
         session.add(subscription)
         session.commit()
-
     @classmethod
-    def remove_subscription(cls, session, client_id, topic):
+    def remove_subscription(cls, client_id, topic):
+        session = Session()
         subscription = session.query(cls).filter_by(client_id=client_id, topic=topic).first()
         if subscription:
             session.delete(subscription)
             session.commit()
-
     @classmethod
-    def get_subscriptions(cls, session, client_id):
+    def get_subscriptions(cls, client_id):
+        session = Session()
         subscriptions = session.query(cls).filter_by(client_id=client_id).all()
         return subscriptions
-
     @classmethod
-    def get_clients(cls, session, topic):
+    def get_clients(cls, topic):
+        session = Session()
         subscriptions = session.query(cls).filter_by(topic=topic).all()
         clients = [s.client for s in subscriptions]
         return clients
+
+    @classmethod
+    def check_topic_exists(cls, client_id, topic):
+        session = Session()
+        subscription = session.query(cls).filter_by(client_id=client_id, topic=topic).first()
+        return subscription is not None
 class Client(Base):
     __tablename__ = 'client'
     client_id = Column(String(50), primary_key=True)

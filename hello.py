@@ -12,7 +12,7 @@ import random
 import string
 import json
 
-from Data import Client, Message
+from Data import Client, Message, Subscription
 
 
 def get_random_string(length):
@@ -423,8 +423,19 @@ class MmtWidget(ttk.Notebook):
             self.enable_disconnect()
     def on_publish(self, client, userdata, mid):
         self.mid = mid
+        
 
-    
+    def load_subscriptions(self,client_id):
+        subscriptions = Subscription.get_subscriptions(client_id)
+        for subscription in subscriptions:
+            self.topiclist.insert('', tk.END, values=(subscription.topic))
+            self.client.subscribe(
+                topic = subscription.topic,
+                qos= int(subscription.qos)
+            )
+            self.client.on_message = self.on_message
+            self.client.loop_start()
+            
 
     def connect(self):
         if (self.connectionstatus.get() == "connect"):
@@ -456,10 +467,12 @@ class MmtWidget(ttk.Notebook):
             except:
                 print("Connection refused") 
                 info = messagebox.showerror(message="Connection refused")
+            self.load_subscriptions(str(self.client_id.get()))
         else:
             self.client.on_disconnect = self.on_disconnect
             self.client.disconnect()
             self.client.loop(timeout=1)
+            
 
     def randomID(self):
         self.client_id.set(get_random_string(8))
@@ -516,16 +529,27 @@ class MmtWidget(ttk.Notebook):
                 data = json.loads(payload_data)
                 for i in data['message']:
                     print(i)
-                    self.client.publish(
-                        topic= i["topic"],
-                        payload= i["payload"],
-                        qos = i["qos"],
-                        retain = i["retain"]
+                    (rc, mid) = self.client.publish(
+                        topic=i["topic"],
+                        payload=i["payload"],
+                        qos=i["qos"],
+                        retain=i["retain"]
                     )
-                    info = messagebox.showinfo(message="Publish successful")
+                    message = Message(
+                        timestamp=datetime.now(),
+                        mid=mid,  # Replace with actual message id
+                        dup=False,  # Replace with actual dup value
+                        state="published",
+                        topic=i["topic"],
+                        payload=i["payload"],
+                        qos=i["qos"],
+                        retain=i["retain"]
+                    )
+                    # store the message in the database
+                    message.create()
+                info = messagebox.showinfo(message="Publish successful")
             except:
                 info = messagebox.showinfo(message="Publish fail")
-
         else: 
             info = messagebox.showerror(message="Please connect")
 
@@ -541,6 +565,9 @@ class MmtWidget(ttk.Notebook):
     def addsubtopic(self):
         if (self.connectionstatus.get() != "connect"):
             if (self.entry4.get() != ""):
+                if(Subscription.check_topic_exists(self.client_id.get(), topic=self.entry4.get())):
+                    info = messagebox.showerror(message="This topic already on subscribe");
+                    return
                 # check database
                 for topic in self.topiclist.get_children():
                     if str(self.topiclist.item(topic)["values"][0]) == self.entry4.get():
@@ -551,6 +578,7 @@ class MmtWidget(ttk.Notebook):
                     qos= int(self.combobox4.get())
                 )
                 self.topiclist.insert('', tk.END, values=(self.entry4.get()))
+                Subscription.add_subscription(self.client_id.get(), self.entry4.get(),int(self.combobox4.get()))
                 self.client.on_message = self.on_message
                 self.client.loop_start()
         else: 
@@ -564,7 +592,19 @@ class MmtWidget(ttk.Notebook):
 
 
     def delsubtopic(self):
-        pass
+        if (self.connectionstatus.get() != "connect"):
+            item = self.topiclist.selection()
+            if not item:
+                messagebox.showerror(message="Please select a topic to unsubscribe")
+                return
+            topic = self.topiclist.item(item, "values")[0]
+            self.client.unsubscribe(topic)
+            self.topiclist.delete(item)
+            Subscription.remove_subscription(self.client_id.get(), topic)
+        else: 
+            info = messagebox.showerror(message="Please connect")
+
+
 
     def topicmsg(self):
         pass
