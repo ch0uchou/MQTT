@@ -258,7 +258,7 @@ class MmtWidget(ttk.Notebook):
         frame8.configure(height=200, width=200)
         text5 = tk.Text(frame8)
         text5.configure(height=10, state="disabled", takefocus=False, width=50)
-        _text_ = 'message theo dạng\n{\n   "messsage":[\n      {\n\t"topic":"<topic>", \t\n\t"payload":"<payload"", \n\t"qos":<qos>,\n\t"retain":<retain>\n\t}\n   ]\n}'
+        _text_ = 'message theo dạng\n{\n   "messsage":[\n      {\n\t"topic":"<topic>", \t\n\t"payload":"<payload>", \n\t"qos":<qos>,\n\t"retain":<retain>\n\t}\n   ]\n}'
         text5.configure(state="normal")
         text5.insert("0.0", _text_)
         text5.configure(state="disabled")
