@@ -466,7 +466,7 @@ class MmtWidget(ttk.Notebook):
     def load_subscriptions(self,client_id):
         subscriptions = Subscription.get_subscriptions(client_id)
         for subscription in subscriptions:
-            self.topiclist.insert('', tk.END, values=(subscription.topic))
+            self.topiclist.insert('', tk.FIRST, values=(subscription.topic))
             self.client.subscribe(
                 topic = subscription.topic,
                 qos= int(subscription.qos)
@@ -476,8 +476,10 @@ class MmtWidget(ttk.Notebook):
     
     def load_messages(self,client_id):
         messages = Message.get_client_messages(client_id)
+        for item in self.treeview5.get_children():
+            self.treeview5.delete(item)
         for message in messages:
-            self.treeview5.insert("", "end", values=(message.id, message.timestamp, message.mid,message.dup,message.state,message.topic, message.payload, message.qos,message.retain))       
+            self.treeview5.insert("", index=0, values=(message.id, message.timestamp, message.mid,message.dup,message.state,message.topic, message.payload, message.qos,message.retain))       
 
     def connect(self):
         if (self.connectionstatus.get() == "connect"):
@@ -500,6 +502,25 @@ class MmtWidget(ttk.Notebook):
             self.client._connect_timeout = int (self.connect_timeout.get())
             self.client.on_connect = self.on_connect
             try:
+                if not data.Client.exists(self.client_id.get()):
+                    client_ = Client(
+                        username=self.username.get(),
+                        password=self.password.get(),
+                        client_id=self.client_id.get()
+                    )
+                    client_.create()
+                self.client = mqtt.Client(
+                    client_id = self.client_id.get(),
+                    clean_session = self.clean_session.get(),
+                    reconnect_on_failure = self.reconnect_on_failure.get()
+                )
+                self.client.username_pw_set(
+                    username = self.username.get(),
+                    password = self.password.get()
+                )
+                self.client._connect_timeout = int (self.connect_timeout.get())
+                self.client.on_connect = self.on_connect
+                
                 self.client.connect(
                     host = self.host.get(),
                     port = int(self.port.get()),
@@ -612,7 +633,7 @@ class MmtWidget(ttk.Notebook):
     def on_message(self, client, userdata, message):
         msg = str(message.payload.decode("utf-8"))
         print("Received message: ", msg)
-        self.treeview3.insert('', tk.END, values=(message.timestamp,message._topic.decode("utf-8"),message.payload.decode("utf-8"),message.qos))
+        self.treeview3.insert('', index= 0, values=(message.timestamp,message._topic.decode("utf-8"),message.payload.decode("utf-8"),message.qos))
         
     
     def addsubtopic(self):
@@ -630,7 +651,7 @@ class MmtWidget(ttk.Notebook):
                     topic = self.entry4.get(),
                     qos= int(self.combobox4.get())
                 )
-                self.topiclist.insert('', tk.END, values=(self.entry4.get()))
+                self.topiclist.insert('', tk.FIRST, values=(self.entry4.get()))
                 Subscription.add_subscription(self.client_id.get(), self.entry4.get(),int(self.combobox4.get()))
                 self.client.on_message = self.on_message
                 self.client.loop_start()
