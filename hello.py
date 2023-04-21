@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import tkinter.ttk as ttk
+import traceback
 import paho.mqtt.client as mqtt
 from sqlalchemy import Engine
 from sqlalchemy.orm import sessionmaker
@@ -472,7 +473,11 @@ class MmtWidget(ttk.Notebook):
             )
             self.client.on_message = self.on_message
             self.client.loop_start()
-            
+    
+    def load_messages(self,client_id):
+        messages = Message.get_client_messages(client_id)
+        for message in messages:
+            self.treeview5.insert("", "end", values=(message.id, message.timestamp, message.mid,message.dup,message.state,message.topic, message.payload, message.qos,message.retain))       
 
     def connect(self):
         if (self.connectionstatus.get() == "connect"):
@@ -505,6 +510,7 @@ class MmtWidget(ttk.Notebook):
                 print("Connection refused") 
                 info = messagebox.showerror(message="Connection refused")
             self.load_subscriptions(str(self.client_id.get()))
+            self.load_messages(str(self.client_id.get()))
         else:
             self.client.on_disconnect = self.on_disconnect
             self.client.disconnect()
@@ -530,7 +536,7 @@ class MmtWidget(ttk.Notebook):
             try:
                 self.client.on_publish = self.on_publish
                 # publish the message and get the mid value
-                self.client.publish(
+                (rc, mid) =self.client.publish(
                     topic= self.topic.get(),
                     payload= self.payloadsub.get("1.0",'end-1c'),
                     qos = int(self.qos.get()),
@@ -539,18 +545,22 @@ class MmtWidget(ttk.Notebook):
                 # create a new Message instance with the obtained mid value and other message attributes
                 message = Message(
                     timestamp=datetime.now(),
-                    mid = self.mid,  # Replace with actual message id
+                    mid = mid,  # Replace with actual message id
                     dup=False,  # Replace with actual dup value
                     state="published",
                     topic=self.topic.get(),
                     payload=self.payloadsub.get("1.0",'end-1c'),
                     qos=int(self.qos.get()),
-                    retain=int(self.retain.get())
+                    retain=int(self.retain.get()),
+                    client_id=self.client_id.get()
                 )
                 # store the message in the database
                 message.create()
                 info = messagebox.showinfo(message="Publish successful")
-            except:
+                self.load_messages(str(self.client_id.get()))
+            except Exception as e:
+                print("An exception occurred: ", e)
+                traceback.print_exc()
                 info = messagebox.showinfo(message="Publish fail")
         else: 
             info = messagebox.showerror(message="Please connect")
@@ -580,12 +590,16 @@ class MmtWidget(ttk.Notebook):
                         topic=i["topic"],
                         payload=i["payload"],
                         qos=i["qos"],
-                        retain=i["retain"]
+                        retain=i["retain"],
+                        client_id=self.client_id.get(),
                     )
                     # store the message in the database
                     message.create()
+                    self.load_messages(str(self.client_id.get()))
                 info = messagebox.showinfo(message="Publish successful")
-            except:
+            except Exception as e:
+                print("An exception occurred: ", e)
+                traceback.print_exc()
                 info = messagebox.showinfo(message="Publish fail")
         else: 
             info = messagebox.showerror(message="Please connect")

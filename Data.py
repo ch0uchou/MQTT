@@ -18,8 +18,10 @@ class Message(Base):
     payload = Column(String(255), nullable=False)
     qos = Column(Integer, nullable=False)
     retain = Column(Boolean, nullable=False)
+    client_id = Column(String(25), ForeignKey('client.client_id'))
+    client = relationship("Client", back_populates="messages")
 
-    def __init__(self, timestamp, mid, dup, state, topic, payload, qos, retain):
+    def __init__(self, timestamp, mid, dup, state, topic, payload, qos, retain, client_id):
         self.timestamp = timestamp
         self.mid = mid
         self.dup = dup
@@ -28,6 +30,7 @@ class Message(Base):
         self.payload = payload
         self.qos = qos
         self.retain = retain
+        self.client_id = client_id
 
     def create(self):
         session = Session()
@@ -66,6 +69,13 @@ class Message(Base):
     def get_all_messages(cls):
         session = Session()
         return session.query(cls).all()
+    
+    @classmethod
+    def get_client_messages(cls,client_id):
+        session = Session()
+        messages = session.query(cls).filter_by(client_id=client_id).all()
+        session.close()
+        return messages
 
 
 class Subscription(Base):
@@ -73,7 +83,7 @@ class Subscription(Base):
     id = Column(Integer, primary_key=True)
     topic = Column(String(255))
     qos = Column(Integer)
-    client_id = Column(Integer, ForeignKey('client.client_id'))
+    client_id = Column(String, ForeignKey('client.client_id'))
     client = relationship("Client", back_populates="subscriptions")
     @classmethod
     def add_subscription(cls, client_id, topic,qos):
@@ -111,6 +121,7 @@ class Client(Base):
     username = Column(String(50), unique=True)
     password = Column(String(50))
     subscriptions = relationship("Subscription", back_populates="client")
+    messages = relationship("Message", back_populates="client")
     
     def create(self):
         session = Session()
