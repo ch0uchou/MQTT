@@ -476,6 +476,8 @@ class MmtWidget(ttk.Notebook):
     
     def load_messages(self,client_id):
         messages = Message.get_client_messages(client_id)
+        for item in self.treeview5.get_children():
+            self.treeview5.delete(item)
         for message in messages:
             self.treeview5.insert("", index=0, values=(message.id, message.timestamp, message.mid,message.dup,message.state,message.topic, message.payload, message.qos,message.retain))       
 
