@@ -292,6 +292,43 @@ class MmtWidget(ttk.Notebook):
         self.add(frame1, text='publish')
         combobox2.current(0)
         self.retain.set(0)
+        frame7 = ttk.Frame(notebook1)
+        frame7.configure(height=200, width=200)
+        self.treeview5 = ttk.Treeview(frame7)
+        # frame3.configure(height=200, width=200)
+        self.treeview5 = ttk.Treeview(frame7, columns=(1,2,3,4,5,6,7,8,9),show='headings')
+        self.treeview5.heading(1,text='Id',anchor='center')
+        self.treeview5.heading(2,text='Timestamp',anchor='center')
+        self.treeview5.heading(3,text='Mid',anchor='center')
+        self.treeview5.heading(4,text='Dup',anchor='center')
+        self.treeview5.heading(5,text='State',anchor='center')
+        self.treeview5.heading(6,text='Topic',anchor='center')
+        self.treeview5.heading(7,text='Payload',anchor='center')
+        self.treeview5.heading(8,text='QoS',anchor='center')
+        self.treeview5.heading(9,text='Retain',anchor='center')
+        self.treeview5.pack(fill="both",expand=True, side="top",anchor='center')
+        self.treeview5.column(1,anchor="center",width=0)
+        self.treeview5.column(2,anchor="center",width=0)
+        self.treeview5.column(3,anchor="center",width=0)
+        self.treeview5.column(4,anchor="center",width=0)
+        self.treeview5.column(5,anchor="center",width=0)
+        self.treeview5.column(6,anchor="center",width=0)
+        self.treeview5.column(7,anchor="center",width=0)
+        self.treeview5.column(8,anchor="center",width=0)
+        self.treeview5.column(9,anchor="center",width=0)
+
+
+        frame7.pack(expand="true", fill="both", side="top")
+        notebook1.add(frame7, text='Message status')
+        notebook1.pack(expand="true", fill="both", side="top")
+        frame1.pack(side="top")
+        self.add(frame1, text='publish')
+        self.configure(height=600, width=600)
+        self.pack(expand="true", fill="both", side="top")
+
+
+
+
         ########subscribe#######
         
         frame9 = ttk.Frame(self)
@@ -566,12 +603,12 @@ class MmtWidget(ttk.Notebook):
         if (self.connectionstatus.get() != "connect"):
             if (self.entry4.get() != ""):
                 if(Subscription.check_topic_exists(self.client_id.get(), topic=self.entry4.get())):
-                    info = messagebox.showerror(message="This topic already on subscribe");
+                    info = messagebox.showerror(message="This topic already on subscribe")
                     return
                 # check database
                 for topic in self.topiclist.get_children():
                     if str(self.topiclist.item(topic)["values"][0]) == self.entry4.get():
-                        info = messagebox.showerror(message="This topic already on subscribe");
+                        info = messagebox.showerror(message="This topic already on subscribe")
                         return
                 self.client.subscribe(
                     topic = self.entry4.get(),
