@@ -259,7 +259,7 @@ class MmtWidget(ttk.Notebook):
         frame8.configure(height=200, width=200)
         text5 = tk.Text(frame8)
         text5.configure(height=10, state="disabled", takefocus=False, width=50)
-        _text_ = 'message theo dạng\n{\n   "messsage":[\n      {\n\t"topic":"<topic>", \t\n\t"payload":"<payload>", \n\t"qos":<qos>,\n\t"retain":<retain>\n\t}\n   ]\n}'
+        _text_ = 'message theo dạng\n{\n   "message":[\n      {\n\t"topic":"<topic>", \t\n\t"payload":"<payload>", \n\t"qos":<qos>,\n\t"retain":<retain>\n\t}\n   ]\n}'
         text5.configure(state="normal")
         text5.insert("0.0", _text_)
         text5.configure(state="disabled")
@@ -466,7 +466,7 @@ class MmtWidget(ttk.Notebook):
     def load_subscriptions(self,client_id):
         subscriptions = Subscription.get_subscriptions(client_id)
         for subscription in subscriptions:
-            self.topiclist.insert('', tk.FIRST, values=(subscription.topic))
+            self.topiclist.insert('', index=0, values=(subscription.topic))
             self.client.subscribe(
                 topic = subscription.topic,
                 qos= int(subscription.qos)
@@ -651,7 +651,7 @@ class MmtWidget(ttk.Notebook):
                     topic = self.entry4.get(),
                     qos= int(self.combobox4.get())
                 )
-                self.topiclist.insert('', tk.FIRST, values=(self.entry4.get()))
+                self.topiclist.insert('', index=0, values=(self.entry4.get()))
                 Subscription.add_subscription(self.client_id.get(), self.entry4.get(),int(self.combobox4.get()))
                 self.client.on_message = self.on_message
                 self.client.loop_start()
@@ -660,9 +660,10 @@ class MmtWidget(ttk.Notebook):
 
         
     def callbacktopiclist(self, event=None):
-        self.entry4.delete(0,'end')
-        item = self.topiclist.selection()[-1]
-        self.entry4.insert(0,self.topiclist.item(item,"values")[0])
+        # self.entry4.delete(0,'end')
+        # item = self.topiclist.selection()[-1]
+        # self.entry4.insert(0,self.topiclist.item(item,"values")[0])
+        pass
 
 
     def delsubtopic(self):
@@ -690,6 +691,7 @@ class MmtWidget(ttk.Notebook):
 if __name__ == "__main__":
     root = tk.Tk()
     widget = MmtWidget(root)
+    root.title("MQTT MMT")
     print(get_random_string(6))
     widget.pack(expand=True, fill="both")
     root.mainloop()
